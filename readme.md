@@ -34,20 +34,23 @@ broker.close()
 simp client makes it easier for mq clients to subscribe and publish to topics, as well as recieve published messages
 
 start a client named "sub_client" and connect it to broker running on "localhost:8080" which requires a authentication token "password"
-```client := simpmq.SimpClient{
+```
+client := simpmq.SimpClient{
 		Id:             "sub_client",
 		SimpBrokerHost: "localhost:8080",
 		Token:          "password",
 	}
 ```
 now actually connect to the server
-```err := client.ConnectToServer()
+```
+err := client.ConnectToServer()
 	if err != nil {
 		return err
 	}
 ```
 subscribe to a topic called "demo_topic"
-```subscriber := make(chan []byte)
+```
+subscriber := make(chan []byte)
 	err = client.Subscribe("demo_topic", func(bytes []byte) {
 		subscriber <- bytes
 	})
