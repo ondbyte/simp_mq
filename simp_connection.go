@@ -45,12 +45,12 @@ func (sc *SimpServerConn) authenticateWithBroker() (err error) {
 	if err != nil {
 		return err
 	}
-	err = sc.respond(&SimpData{Type: auth, Payload: bytes, ID: sc.Id})
+	err = respond(&SimpData{Type: auth, Payload: bytes, ID: sc.Id}, sc.NetConn)
 
 	if err != nil {
 		return err
 	}
-	data, err := sc.nextDataFromConnection()
+	data, err := nextDataFromConnection(sc.BufferSize, sc.NetConn)
 	if err != nil {
 		return err
 	}
@@ -80,10 +80,17 @@ func (sc *SimpServerConn) respond(data *SimpData) (err error) {
 //authenticates using provided autheticator funtion provided to the instance
 //return the auth data or else error
 func (sc *SimpClientConn) authenticateWithClient() (data *SimpData, err error) {
+	if sc.authenticated {
+		return nil, fmt.Errorf("already authenticated")
+	}
 	if sc.WaitForAuthentication == 0 {
 		sc.WaitForAuthentication = time.Second * 16
 	}
-	data, err = sc.nextDataFromConnectionWithWait(sc.WaitForAuthentication)
+	sc.NetConn.SetReadDeadline(time.Now().Add(sc.WaitForAuthentication))
+	data, err = nextDataFromConnection(sc.BufferSize, sc.NetConn)
+	var t time.Time
+	sc.NetConn.SetReadDeadline(t)
+
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +108,7 @@ func (sc *SimpClientConn) authenticateWithClient() (data *SimpData, err error) {
 		} else {
 			sc.Id = deets.ClientID
 		}
+		sc.authenticated = true
 		return data, nil
 	} else {
 		return nil, fmt.Errorf("simp broker Authenticator must be provided")
@@ -121,28 +129,6 @@ func (sc *SimpClientConn) nextDataFromConnection() (*SimpData, error) {
 		return nil, fmt.Errorf("connection is not authenticated to read")
 	}
 	return nextDataFromConnection(sc.BufferSize, sc.NetConn)
-}
-
-//fails if not authenticated or time's up
-//waits for next data to arrive
-func (sc *SimpClientConn) nextDataFromConnectionWithWait(t time.Duration) (*SimpData, error) {
-	if !sc.authenticated {
-		return nil, fmt.Errorf("connection is not authenticated to read")
-	}
-	ch := make(chan *SimpData)
-	var err error
-	go func() {
-		conn := sc.NetConn
-		conn.SetReadDeadline(time.Now().Add(t))
-		data, err := nextDataFromConnection(sc.BufferSize, sc.NetConn)
-		conn.SetReadDeadline(time.Time{})
-		if err == nil {
-			ch <- data
-		}
-		close(ch)
-	}()
-	r1, _ := <-ch
-	return r1, err
 }
 
 //send data to the client

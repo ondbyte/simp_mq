@@ -8,6 +8,32 @@ import (
 	"yadunandan.xyz/simp_mq/slog"
 )
 
+type SubScribers struct {
+	all map[string]map[string]*SimpClientConn
+}
+
+func (SubScribers *SubScribers) init() {
+	SubScribers.all = make(map[string]map[string]*SimpClientConn)
+}
+
+func (SubScribers *SubScribers) addForTopic(topic string, simpConn *SimpClientConn) {
+	all := SubScribers.all[topic]
+	if all == nil {
+		all = make(map[string]*SimpClientConn)
+	}
+	all[simpConn.Id] = simpConn
+	SubScribers.all[topic] = all
+}
+
+func (SubScribers *SubScribers) removeForTopic(topic string, simpConn *SimpClientConn) {
+	all := SubScribers.all[topic]
+	if all == nil {
+		return
+	}
+	delete(all, simpConn.Id)
+	SubScribers.all[topic] = all
+}
+
 //a simple broker which you can publish to subscribe to
 type SimpBroker struct {
 	//unique id
@@ -15,7 +41,7 @@ type SimpBroker struct {
 	//port the broker must try to run on or fail
 	Port string
 	//topic subscribers
-	subscribers map[string][]*SimpClientConn
+	subscribers *SubScribers
 	//connectsions with their ids
 	allConnections map[string]*SimpClientConn
 	//internal channel recieves event when the server gets closed so any go routines depended on the server can close
@@ -39,7 +65,8 @@ func (broker *SimpBroker) Serve() (err error) {
 	if broker.MaxMessageBuffer == 0 {
 		broker.MaxMessageBuffer = 1024
 	}
-	broker.subscribers = make(map[string][]*SimpClientConn)
+	broker.subscribers = &SubScribers{}
+	broker.subscribers.init()
 	broker.allConnections = make(map[string]*SimpClientConn)
 	ln, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", broker.Port))
 	if err != nil {
@@ -112,9 +139,21 @@ func (broker *SimpBroker) afterAuthLoopForConn(simpConn *SimpClientConn) (err er
 		nextData, err := simpConn.nextDataFromConnection()
 		if err == nil {
 			switch nextData.Type {
-			case auth:
+			case pub:
 				{
-					slog.Print("client %s is already authenticated", simpConn.Id)
+					deets, err := nextData.GetPubDetails()
+					if err != nil {
+						slog.Warn("theres error getting pub details simp_broker:afterAuthLoopForConn()")
+					}
+					for _, subscriber := range broker.subscribers.all[deets.Topic] {
+						subscriber.respond(nextData)
+					}
+					//send acknkowledge
+					nextData.Type = pubAck
+					err = simpConn.respond(nextData)
+					if err != nil {
+						slog.Warn("error responding")
+					}
 					break
 				}
 			case sub:
@@ -123,24 +162,33 @@ func (broker *SimpBroker) afterAuthLoopForConn(simpConn *SimpClientConn) (err er
 					if err != nil {
 						slog.Warn("theres error getting sub details simp_broker:afterAuthLoopForConn()")
 					}
-					broker.subscribers[deets.Topic] = append(broker.subscribers[deets.Topic], simpConn)
+					broker.subscribers.addForTopic(deets.Topic, simpConn)
 					//send acknkowledge
 					nextData.Type = subAck
-					simpConn.respond(nextData)
+					err = simpConn.respond(nextData)
+					if err != nil {
+						slog.Warn("error responding")
+					}
 					break
 				}
-			case pub:
+			case unsub:
 				{
-					deets, err := nextData.GetPubDetails()
+					deets, err := nextData.GetSubDetails()
 					if err != nil {
-						slog.Warn("theres error getting pub details simp_broker:afterAuthLoopForConn()")
+						slog.Warn("theres error getting sub details simp_broker:afterAuthLoopForConn()")
 					}
-					for _, subscriber := range broker.subscribers[deets.Topic] {
-						subscriber.respond(nextData)
-					}
+					broker.subscribers.removeForTopic(deets.Topic, simpConn)
 					//send acknkowledge
-					nextData.Type = pubAck
-					simpConn.respond(nextData)
+					nextData.Type = unsubAck
+					err = simpConn.respond(nextData)
+					if err != nil {
+						slog.Warn("error responding")
+					}
+					break
+				}
+			case auth:
+				{
+					slog.Print("client %s is already authenticated", simpConn.Id)
 					break
 				}
 			}

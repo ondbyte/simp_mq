@@ -70,7 +70,6 @@ func startSubscriptionClient(t *testing.T) error {
 
 	err := client.ConnectToServer()
 	if err != nil {
-
 		return err
 	}
 	subscriber := make(chan []byte)
@@ -78,7 +77,6 @@ func startSubscriptionClient(t *testing.T) error {
 		subscriber <- bytes
 	})
 	if err != nil {
-
 		return err
 	}
 	recd := make([][]byte, 0)
@@ -91,7 +89,13 @@ func startSubscriptionClient(t *testing.T) error {
 		}
 	}
 
+	err = client.UnSubscribe("demo_topic")
 	close(subscriber)
+	client.Close()
+
+	if err != nil {
+		t.Errorf("failed to unsubscribe")
+	}
 
 	if len(recd) != len(toSend) {
 		t.Errorf("failed to recieve sent messages on client, number of recieved msg is %d but should be %d", len(recd), len(toSend))
