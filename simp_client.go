@@ -50,7 +50,22 @@ func (client *SimpClient) ConnectToServer() (err error) {
 			data, err := simpConn.nextDataFromConnection()
 			if err == nil {
 				switch data.Type {
-				case subAck:
+
+				case pub:
+					{
+						//handle a published message
+						deets, err := data.GetPubDetails()
+						if err == nil {
+							listener, waiting := client.subscriptions[deets.Topic]
+							if waiting {
+								listener(deets.Data)
+							}
+						} else {
+							slog.Warn("unable to get pub details code: xyz122")
+						}
+					}
+
+				case subAck, unsubAck:
 					{
 						//handle a subscribe acknowledgement message
 						ch, waiting := client.waitingForSubUnSub[data.ID]
@@ -64,19 +79,6 @@ func (client *SimpClient) ConnectToServer() (err error) {
 						ch, waiting := client.waitingForPubAck[data.ID]
 						if waiting {
 							ch <- true
-						}
-					}
-				case pub:
-					{
-						//handle a published message
-						deets, err := data.GetPubDetails()
-						if err == nil {
-							listener, waiting := client.subscriptions[deets.Topic]
-							if waiting {
-								listener(deets.Data)
-							}
-						} else {
-							slog.Warn("unable to get pub details code: xyz122")
 						}
 					}
 				}
@@ -160,14 +162,13 @@ func (client *SimpClient) UnSubscribe(topic string) error {
 		return err
 	}
 	ch := make(chan bool)
-	client.waitingForSubUnSub[topic] = ch
+	client.waitingForSubUnSub[id] = ch
 	_, unsubscribed := <-ch
-	delete(client.waitingForSubUnSub, topic)
+	delete(client.waitingForSubUnSub, id)
 	if !unsubscribed {
 		return fmt.Errorf("failed to unsubscribe to topic %s", topic)
 	}
 	close(ch)
-	delete(client.waitingForSubUnSub, topic)
 	return nil
 }
 
