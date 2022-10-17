@@ -1,6 +1,6 @@
 ## SimpMQ
 
-a dead simple message queue which doesn't support any storage (not yet), or follow any protocol, written in go.
+a dead simple message queue with no dependencies and which doesn't support any storage (not yet), or follow any protocol, written in go.
 
 there are two compenents
 
