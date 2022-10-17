@@ -58,3 +58,11 @@ if err != nil {
 	return err
 }
 ```
+publish to a topic called "demo_topic"
+```go
+err := client.Publish("demo_topic", []byte("message to send"))
+
+if err != nil {
+	//fail...
+}
+```
