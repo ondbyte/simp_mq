@@ -3,6 +3,7 @@ package simpmq_test
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -145,4 +146,26 @@ func TestTime(t *testing.T) {
 	fmt.Println(time.Now())
 	fmt.Println(time.Now())
 	fmt.Println(time.Now())
+}
+
+func TestTemp(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5, 6, 7, 8}
+
+	wg := sync.WaitGroup{}
+
+	var result []int
+
+	for i, num := range input {
+		wg.Add(1)
+		go func(num, i int) {
+			if num%2 == 0 {
+				result = append(result, num)
+			}
+
+			wg.Done()
+		}(num, i)
+	}
+	wg.Wait()
+
+	fmt.Println(result)
 }
