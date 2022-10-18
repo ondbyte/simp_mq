@@ -1,4 +1,4 @@
-package simpmq_test
+package simpmq
 
 import (
 	"errors"
@@ -6,8 +6,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	simpmq "yadunandan.xyz/simp_mq"
 )
 
 var (
@@ -44,11 +42,11 @@ func TestMQ(t *testing.T) {
 	<-ch
 }
 
-func startSimpBroker(t *testing.T) (*simpmq.SimpBroker, error) {
-	broker := &simpmq.SimpBroker{
+func startSimpBroker(t *testing.T) (*SimpBroker, error) {
+	broker := &SimpBroker{
 		Id:   "demo_broker",
 		Port: "8080",
-		Authenticator: func(deets *simpmq.AuthDetails) error {
+		Authenticator: func(deets *AuthDetails) error {
 			if deets.Token == "password" {
 				return nil
 			}
@@ -63,7 +61,7 @@ func startSimpBroker(t *testing.T) (*simpmq.SimpBroker, error) {
 	return broker, nil
 }
 func startSubscriptionClient(t *testing.T) error {
-	client := simpmq.SimpClient{
+	client := SimpClient{
 		Id:             "sub_client",
 		SimpBrokerHost: "localhost:8080",
 		Token:          "password",
@@ -106,7 +104,7 @@ func startSubscriptionClient(t *testing.T) error {
 }
 
 func startPublishClient(t *testing.T) error {
-	client := simpmq.SimpClient{
+	client := SimpClient{
 		Id:             "pub_client",
 		SimpBrokerHost: "localhost:8080",
 		Token:          "password",
@@ -136,7 +134,7 @@ func startPublishClient(t *testing.T) error {
 func TestError(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println(fmt.Sprintf("%+v", r))
+			fmt.Printf("%+v\n", r)
 		}
 	}()
 	panic("what")

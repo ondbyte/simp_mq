@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net"
 	"time"
-
-	"yadunandan.xyz/simp_mq/slog"
 )
 
 //stores details of connection from a client on server
@@ -119,7 +117,7 @@ func (sc *SimpClientConn) authenticateWithClient() (data *SimpData, err error) {
 func (sc *SimpClientConn) close() {
 	err := sc.NetConn.Close()
 	if err != nil {
-		slog.Warn("error closing connection simp_connection: close()")
+		fmt.Print("error closing connection simp_connection: close()")
 	}
 }
 

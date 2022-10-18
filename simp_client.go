@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net"
 	"time"
-
-	"yadunandan.xyz/simp_mq/slog"
 )
 
 type SimpClient struct {
@@ -61,7 +59,7 @@ func (client *SimpClient) ConnectToServer() (err error) {
 								listener(deets.Data)
 							}
 						} else {
-							slog.Warn("unable to get pub details code: xyz122")
+							fmt.Println("unable to get pub details code: xyz122")
 						}
 					}
 
@@ -89,7 +87,6 @@ func (client *SimpClient) ConnectToServer() (err error) {
 	go func() {
 		_, more := <-client.connectedToServer
 		if !more {
-			client.ConnectedToServer = false
 			conn.Close()
 			fmt.Printf("[%s] disconnected from broker %s and exited\n", client.Id, conn.RemoteAddr())
 		}
@@ -101,6 +98,7 @@ func (client *SimpClient) ConnectToServer() (err error) {
 
 func (client *SimpClient) Close() {
 	if client.ConnectedToServer {
+		client.ConnectedToServer = false
 		close(client.connectedToServer)
 	}
 }
