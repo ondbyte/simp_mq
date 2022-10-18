@@ -3,6 +3,23 @@
 # SimpMQ
 ##### a dead simple message queue with no dependencies and doesn't support any storage (not yet), or follow any protocol, written in go.
 
+## Installation
+
+To install simp_mq package, you need to install Go and set your Go workspace first.
+
+1. You first need [Go](https://golang.org/) installed (**version 1.16+ is required**), then you can use the below Go command to install simp_mq.
+
+```sh
+go get -u github.com/ondbyte/simp_mq
+```
+
+2. Import it in your code:
+
+```go
+import "github.com/ondbyte/simp_mq"
+```
+## How to use
+
 ## _there are two compenents_
 ### SimpBroker
 broker accepts subscriptions and distributes published messages to subscribers
