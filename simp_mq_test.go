@@ -1,11 +1,13 @@
-package simpmq
+package main
 
 import (
 	"errors"
 	"fmt"
-	"sync"
 	"testing"
 	"time"
+
+	"github.com/ondbyte/simp_mq/simp_broker"
+	"github.com/ondbyte/simp_mq/simp_client"
 )
 
 var (
@@ -23,7 +25,7 @@ func TestMQ(t *testing.T) {
 		close(ch)
 		return
 	}
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 5)
 	go func() {
 		err := startSubscriptionClient(t)
 		if err != nil {
@@ -42,11 +44,11 @@ func TestMQ(t *testing.T) {
 	<-ch
 }
 
-func startSimpBroker(t *testing.T) (*SimpBroker, error) {
-	broker := &SimpBroker{
+func startSimpBroker(t *testing.T) (*simp_broker.SimpBroker, error) {
+	broker := &simp_broker.SimpBroker{
 		Id:   "demo_broker",
 		Port: "8080",
-		Authenticator: func(deets *AuthDetails) error {
+		Authenticator: func(deets *simp_broker.AuthDetails) error {
 			if deets.Token == "password" {
 				return nil
 			}
@@ -61,7 +63,7 @@ func startSimpBroker(t *testing.T) (*SimpBroker, error) {
 	return broker, nil
 }
 func startSubscriptionClient(t *testing.T) error {
-	client := SimpClient{
+	client := &simp_client.SimpClient{
 		Id:             "sub_client",
 		SimpBrokerHost: "localhost:8080",
 		Token:          "password",
@@ -104,7 +106,7 @@ func startSubscriptionClient(t *testing.T) error {
 }
 
 func startPublishClient(t *testing.T) error {
-	client := SimpClient{
+	client := &simp_client.SimpClient{
 		Id:             "pub_client",
 		SimpBrokerHost: "localhost:8080",
 		Token:          "password",
@@ -131,6 +133,7 @@ func startPublishClient(t *testing.T) error {
 	return nil
 }
 
+/*
 func TestError(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -167,3 +170,4 @@ func TestTemp(t *testing.T) {
 
 	fmt.Println(result)
 }
+*/

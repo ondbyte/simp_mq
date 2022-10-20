@@ -1,4 +1,4 @@
-package simpmq
+package simp_client
 
 import (
 	"encoding/json"
@@ -160,6 +160,12 @@ func nextDataFromConnection(BufferSize uint, NetConn net.Conn) (*SimpData, error
 		simpData := &SimpData{}
 		err = json.Unmarshal(buf[:readLen], simpData)
 		if err != nil {
+			var serr *json.SyntaxError
+			if errors.As(err, &serr) {
+				return nil, fmt.Errorf("no other clients are supported, calls to SimpBroker must be made from a SimpClient\n%s\n%s",
+					"please check https://github.com/ondbyte/simp_mq to know which languages have SimpClient implementation",
+					"if you need a SimplClient implemented in a new language, please place a feature request")
+			}
 			return nil, err
 		} else {
 			return simpData, nil

@@ -4,7 +4,7 @@
 //    simpData, err := UnmarshalSimpData(bytes)
 //    bytes, err = simpData.Marshal()
 
-package simpmq
+package simp_broker
 
 import (
 	"encoding/json"

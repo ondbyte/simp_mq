@@ -1,4 +1,4 @@
-package simpmq
+package simp_broker
 
 import (
 	"fmt"
