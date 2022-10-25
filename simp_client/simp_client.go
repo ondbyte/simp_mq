@@ -33,7 +33,7 @@ func (client *SimpClient) ConnectToServer() (err error) {
 	simpConn := &SimpServerConn{NetConn: conn, BufferSize: 1024, AuthDetails: &AuthDetails{
 		Token:    client.Token,
 		ClientID: client.Id,
-	}}
+	}, Id: client.Id}
 
 	err = simpConn.authenticateWithBroker()
 

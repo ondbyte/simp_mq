@@ -37,7 +37,7 @@ type SimpServerConn struct {
 	Id string //id
 }
 
-//attempts to authenticate with the server using the AuthDetails
+/* //attempts to authenticate with the server using the AuthDetails
 func (sc *SimpServerConn) authenticateWithBroker() (err error) {
 	bytes, err := json.Marshal(sc.AuthDetails)
 	if err != nil {
@@ -73,7 +73,7 @@ func (sc *SimpServerConn) respond(data *SimpData) (err error) {
 		return fmt.Errorf("connection is not authenticated to respond")
 	}
 	return respond(data, sc.NetConn)
-}
+} */
 
 //authenticates using provided autheticator funtion provided to the instance
 //return the auth data or else error

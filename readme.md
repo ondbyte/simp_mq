@@ -1,7 +1,14 @@
 ![header](simp_mq.png)
 
 # SimpMQ
-##### a dead simple message queue with no dependencies and doesn't support any storage (not yet), or follow any protocol, written in go.
+#### a dead simple message queue with no dependencies and doesn't support any storage (not yet), or follow any protocol, written in go.
+#
+
+>```sh
+>WARNING:
+>
+>Even though it is working, as it is in early developement, expect breaking changes
+>```
 
 ## Installation for use in go code
 
